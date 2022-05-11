@@ -7,9 +7,10 @@ const customerdata =mongoose.Schema({
     "order":{
         "productname":[String],
         "quantity":[Number],
-        "date":[String],
-        "billamount":{type:Number,default:0}
-    }
+        "date":[String]
+        
+    },
+    "billamount" : {type:Number,default:0}
 })
 const productdata =mongoose.Schema({
     "productname":String,
@@ -20,6 +21,8 @@ const productdata =mongoose.Schema({
 const orderdata =mongoose.Schema({
         "date":String,
         "ordersandwich":{
+            "customername":[String],
+            "status":[String],
             "productname":[String],
             "quantity":[Number]
         }
@@ -51,8 +54,30 @@ let saveproduct=async(data,data1,data2)=>{
     return "product added"
 }
 }
+
 let takeorder=async(data,data1,data2,data3)=>{
      const a=await model2.aggregate([{$match:{"productname":data1}}])
+     const d=a[0].price*data2;
+     if(a.length>0){
+await model1.updateOne({"customername":data},{$push:{'order.productname':data1,'order.quantity':data2,'order.date':data3}})
+    await model1.updateOne({"customername":data},{$inc:{"billamount":+d}})
+    await model2.updateOne({"productname":data1},{$inc:{"ordercount":data2,'purchasedhistory':1}})
+    const b=await model3.aggregate([{$match:{"date":data3}}])
+    if(b.length>0)
+    {  await model3.updateOne({'date':data3},{$push:{'ordersandwich.productname':data1,'ordersandwich.quantity':data2,'ordersandwich.customername':data,'ordersandwich.status':"ordered"}})
+}
+else{
+    const user=new model3({'date':data3,'ordersandwich.productname':data1,'ordersandwich.quantity':data2,'ordersandwich.customername':data,'ordersandwich.status':"ordered"})
+    await user.save()
+
+}
+    return "order taken"}
+    else 
+    return "order rejected no stock of ordered product"
+
+}
+let updateOrder=async(data,data1,data2,data3,id)=>{
+   const a=await model2.aggregate([{$match:{"productname":data1}}])
      const d=a[0].price*data2;
      if(a.length>0){
     await model1.updateOne({"customername":data},{$set:{'order.productname':data1,'order.quantity':data2,'order.date':data3}})
@@ -70,35 +95,24 @@ let takeorder=async(data,data1,data2,data3)=>{
     return "order taken"}
     else 
     return "order rejected no stock of ordered product"
-
-}
-let updateOrder=async(data,data1,data2,data3)=>{
-     const a=await model2.aggregate([{$match:{"productname":data1}}])
-     if(a.length>0){
-await model1.updateOne({"customername":data},{$push:{'order.productname':data1,'order.quantity':data2,'order.date':data3}})
- await model2.updateOne({"productname":data1},{$inc:{"ordercount":data2}})
-      const b=await model3.aggregate([{$match:{"date":data3}}])
-    if(b.length>0)
-    {  await model3.updateOne({'date':data3},{$push:{'ordersandwich.productname':data1,'ordersandwich.quantity':data2}})
-    }
-     const d=a[0].price*data2;
-    await model1.updateOne({"customername":data},{$inc:{"order.billamount":+d}})
-    return "order taken"}
-    else 
-    return "order rejected no stock of ordered product"
 }
 let deleteOrder=async(data,data1,data2,data3)=>{
-     const a=await model2.aggregate([{$match:{"productname":data1}}])
+ const a=await model2.aggregate([{$match:{"productname":data1}}])
+     const d=a[0].price*data2;
      if(a.length>0){
 await model1.updateOne({"customername":data},{$pull:{'order.productname':data1,'order.quantity':data2,'order.date':data3}})
- await model2.updateOne({"productname":data1},{$inc:{"ordercount":-data2}})
-      const b=await model3.aggregate([{$match:{"date":data3}}])
+    await model1.updateOne({"customername":data},{$inc:{"billamount":-d}})
+    await model2.updateOne({"productname":data1},{$inc:{"ordercount":data2,'purchasedhistory':1}})
+    const b=await model3.aggregate([{$match:{"date":data3}}])
     if(b.length>0)
-    {  await model3.updateOne({'date':data3},{$pull:{'ordersandwich.productname':data1,'ordersandwich.quantity':data2}})
+    {  await model3.updateOne({'date':data3},{$push:{'ordersandwich.productname':data1,'ordersandwich.quantity':data2,'ordersandwich.customername':data,'ordersandwich.status':"orderedcancelled"}})
 }
-     const d=a[0].price*data2;
-    await model1.updateOne({"customername":data},{$inc:{"order.billamount":-d}})
-    return "order removed "}
+else{
+    const user=new model3({'date':data3,'ordersandwich.productname':data1,'ordersandwich.quantity':data2,'ordersandwich.customername':data,'ordersandwich.status':"orderedcancelled"})
+    await user.save()
+
+}
+    return "order removed"}
     else 
     return "order rejected no stock of ordered product"
 }
@@ -123,6 +137,10 @@ let getuserdetails =async(data)=>{
     return getuserDetails
     
 }
+let getproductcount=async(data)=>{
+     let getproductDetails=await model2.aggregate([{$match:{"productname":data}}]);
+    return getproductDetails
+}
 let getadmin =async(data)=>{
     let get=await model4.aggregate([{$match:{"adminname":data}}]);
     return get
@@ -139,6 +157,6 @@ let orderlist=async(a)=>{
 
 module.exports={
     register,
-    getuserdetails,
-    saveproduct,takeorder,updateOrder,deleteOrder,getData,getadmin,show,orderlist
+    getuserdetails, 
+    saveproduct,takeorder,updateOrder,deleteOrder,getData,getadmin,show,orderlist,getproductcount
 }

@@ -12,10 +12,14 @@ let user  = async(req,res) =>{
 
 }
 let orderlist =async(req,res)=>{
+      if(loggedin=="admin"){
      let date=req.body.date
      console.log(date)
     let result=await servent.orderlist(date)
-    res.send(result)
+        res.send(result)}
+        else{
+             res.send("login admin access customer list")
+        }
 
 }
 let register=async(req,res)=>{
@@ -48,8 +52,7 @@ let createOrder=async(req,res)=>{
     let productname=req.body.productname
     let quantity=req.body.quantity
     let date=req.body.date
-    let all=req.body
-    const data= await servent.takeorder(customername,productname,quantity,date,all)
+    const data= await servent.takeorder(customername,productname,quantity,date)
     res.send(data)}
 else
     res.send("login to order product")
@@ -100,6 +103,13 @@ let login =async(req,res)=>{
        else
     res.send({"code":"400","message":"password incorrect"})
    }}
+   let productcount = async(req,res)=>{
+       let product=req.body.productname;
+       let result=await servent.getproductcount(product)
+       let count =result[0].ordercount
+       console.log(count)
+       res.send(`${count}`)
+   }
   let adminlogin =async(req,res)=>{
     let username=req.body.adminname;
     let password=req.body.pin;
@@ -117,4 +127,4 @@ let login =async(req,res)=>{
     res.send({"code":"400","message":"password incorrect"})
    }}
    
-module.exports={user,register,login,productupload,createOrder,updateOrder,deleteOrder,searchorder,adminlogin,customerlist,orderlist}
+module.exports={user,register,login,productupload,createOrder,updateOrder,deleteOrder,searchorder,adminlogin,customerlist,orderlist,productcount}
