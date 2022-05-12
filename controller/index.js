@@ -1,130 +1,190 @@
 const express=require('express');
+const CSVToJSON=require('csvtojson')
 const res = require('express/lib/response');
+require('http-errors')
 const { stringify } = require('nodemon/lib/utils');
+const jsonwebtoken = require('jsonwebtoken');
+const fs=require('fs')
 const router =new express.Router();
-let loggedin=false
+const csv=require('csv-parser')
 let servent=require('./service')
-let user  = async(req,res) =>{
-  
-    console.log("Welcome to Node JS")
-    res.send({"Result":`sum is ${2+2}`})
-
-
-}
 let orderlist =async(req,res)=>{
-      if(loggedin=="admin"){
-     let date=req.body.date
+        try{
+     if(req.file==undefined)
+     res.send('upload only a csv file')
+     else{
+      const path="./files/"+req.file.filename
+    console.log(path)
+    const temp= await CSVToJSON().fromFile(path)
+    let date=temp[0].date;
      console.log(date)
     let result=await servent.orderlist(date)
         res.send(result)}
-        else{
-             res.send("login admin access customer list")
-        }
-
-}
-let register=async(req,res)=>{
-    let name=req.body.customername;
-    let data=req.body;
-    let result=await servent.register(data,name)
-    res.send(result);
-}
-let customerlist=async(req,res)=>{
-    if(loggedin=="admin"){
-        let result=await servent.show()
-        res.send(result)}
-        else
-        res.send("login admin access customer list")
-}
-let productupload=async(req,res)=>{
-    if(loggedin=="admin"){
-    let name=req.body.productname;
-    let data=req.body;
-    let price=req.body.price;
-    let result=await servent.saveproduct(data,name,price)
-    res.send(result);}
-    else{
-        res.send("login as admin to upload product")
+         }
+    catch{
+        console.log("error")
     }
 }
-let createOrder=async(req,res)=>{
-    if(loggedin){
-    let customername=req.body.customername
-    let productname=req.body.productname
-    let quantity=req.body.quantity
-    let date=req.body.date
-    const data= await servent.takeorder(customername,productname,quantity,date)
-    res.send(data)}
-else
-    res.send("login to order product")
+let register=async(req,res)=>{
+     try{
+     if(req.file==undefined)
+     res.send('upload only a csv file')
+     else{
+      const path="./files/"+req.file.filename
+    console.log(path)
+    const temp= await CSVToJSON().fromFile(path)
+    let data1=temp[0].customername;
+    let data2=temp[0].password;
+    console.log(temp)
+    let result=await servent.register(data1,data2)
+    res.send(result);
 }
+  }
+    catch{
+        console.log("error")
+    }
+}
+let customerlist=async(req,res)=>{
+        let result=await servent.show()
+        res.send(result)}
+let productupload=async(req,res)=>{
+  
+    try{
+     if(req.file==undefined)
+     res.send('upload only a csv file')
+     else{
+      const path="./files/"+req.file.filename
+    console.log(path)
+    const temp= await CSVToJSON().fromFile(path)
+    console.log(temp)
+      let name=temp[0].productname;
+    let data=temp;
+    let price=parseInt(temp[0].price);
+    let result=await servent.saveproduct(data,name,price)
+    res.send(result);
+    }
+}
+    catch{
+        console.log("error")
+    }
+   
+}
+
+let createOrder=async(req,res)=>{
+     try{
+     if(req.file==undefined)
+     res.send('upload only a csv file')
+     else{
+      const path="./files/"+req.file.filename
+    console.log(path)
+    const temp= await CSVToJSON().fromFile(path)
+    console.log(temp)
+    let customername=temp[0].customername
+    let productname=temp[0].productname
+    let quantity=parseInt(temp[0].quantity)
+    let date=temp[0].date
+    let id=parseInt(temp[0].orderid)
+    const data= await servent.takeorder(customername,productname,quantity,date,id)
+    res.send(data)}
+     }
+     catch{
+          console.log("error")
+     }
+    }
 let searchorder =async(req,res)=>{
-    if(loggedin){
-    let getdata=await servent.getData(req.customername);
+     try{
+     if(req.file==undefined)
+     res.send('upload only a csv file')
+     else{
+      const path="./files/"+req.file.filename
+    console.log(path)
+    const temp= await CSVToJSON().fromFile(path)
+    let data1=temp[0].customername;
+    let getdata=await servent.getData(data1);
      console.log("getdata",getdata)
     res.send(getdata)}
-   else
-   res.send("login check your order")
-}
+      }
+     catch{
+          console.log("error")
+     }
+    }
 let updateOrder=async(req,res)=>{
-    if(loggedin){
-    let customername=req.body.customername
-    let productname=req.body.productname
-    let quanity=req.body.quantity
-    let date=req.body.date
-    const data= await servent.updateOrder(customername,productname,quanity,date)
+     try{
+     if(req.file==undefined)
+     res.send('upload only a csv file')
+     else{
+      const path="./files/"+req.file.filename
+    console.log(path)
+    const temp= await CSVToJSON().fromFile(path)
+    console.log(temp)
+    let customername=temp[0].customername
+    let productname=temp[0].productname
+    let quantity=parseInt(temp[0].quantity)
+    let date=temp[0].date
+    let id=parseInt(temp[0].orderid)
+    const data= await servent.updateOrder(customername,productname,quantity,date,id)
     res.send(data)}
-else
-    res.send("login to order product")
-}
+      }
+     catch{
+          console.log("error")
+     }
+    }
 let deleteOrder=async(req,res)=>{
-    if(loggedin){
-    let customername=req.body.customername
-    let productname=req.body.productname
-    let quanity=req.body.quantity
-    let date=req.body.date
-    const data= await servent.deleteOrder(customername,productname,quanity,date)
+     try{
+     if(req.file==undefined)
+     res.send('upload only a csv file')
+     else{
+      const path="./files/"+req.file.filename
+    console.log(path)
+    const temp= await CSVToJSON().fromFile(path)
+    console.log(temp)
+    let customername=temp[0].customername
+    let productname=temp[0].productname
+    let quantity=parseInt(temp[0].quantity)
+    let date=temp[0].date
+    let id=parseInt(temp[0].orderid)
+    const data= await servent.deleteOrder(customername,productname,quantity,date,id)
     res.send(data)}
-else
-    res.send("login to order product")
-}
+    }
+     catch{
+          console.log("error")
+     }
+    }
 let login =async(req,res)=>{
-    let username=req.body.customername;
+      let username=req.body.customername;
     let password=req.body.password;
     let getdata=await servent.getuserdetails(username);
    if(getdata.length==0){
-    res.send({"code":"400","message":"user not found create a account to proceed"})
+    res.send({code:"400",message:"user not found create a account to proceed"})
    }
    else
    {
        if(password==getdata[0].password){
-           loggedin=true
-       res.send(`code:200,message:login sucess`)
+           const token=jsonwebtoken.sign({
+           customername:getdata[0].customername
+           },process.env.JWT_SECRET_KEY)
+       res.send({status:200,message:"login sucess",accessToken:token})
     }
        else
-    res.send({"code":"400","message":"password incorrect"})
+    res.send({status:400,message:"password incorrect"})
    }}
    let productcount = async(req,res)=>{
-       let product=req.body.productname;
-       let result=await servent.getproductcount(product)
-       let count =result[0].ordercount
-       console.log(count)
-       res.send(`${count}`)
+       try{
+     if(req.file==undefined)
+     res.send('upload only a csv file')
+     else{
+      const path="./files/"+req.file.filename
+    console.log(path)
+    const temp= await CSVToJSON().fromFile(path)
+    let date=temp[0].date;
+       let result=await servent.getproductcount(date)
+       console.log(result)
+       res.send(`product ordered in ${date} is ${result}`)
    }
-  let adminlogin =async(req,res)=>{
-    let username=req.body.adminname;
-    let password=req.body.pin;
-    let getdata=await servent.getadmin(username);
-   if(getdata.length==0){
-    res.send({"code":"400","message":"user not found create a account to proceed"})
-   }
-   else
-   {
-       if(password==getdata[0].pin){
-           loggedin="admin"
-       res.send(`code:200,message:login sucess`)
     }
-       else
-    res.send({"code":"400","message":"password incorrect"})
-   }}
+     catch{
+          console.log("error")
+     }
+    }
    
-module.exports={user,register,login,productupload,createOrder,updateOrder,deleteOrder,searchorder,adminlogin,customerlist,orderlist,productcount}
+module.exports={register,login,productupload,createOrder,updateOrder,deleteOrder,searchorder,customerlist,orderlist,productcount}

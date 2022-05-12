@@ -1,4 +1,5 @@
 const app=require('express')()
+require('dotenv').config()
 const bodyparser=require('body-parser')
 app.use(bodyparser.urlencoded({extended:false}))
 app.use(bodyparser.json())
