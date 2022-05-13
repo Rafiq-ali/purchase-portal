@@ -151,15 +151,22 @@ let deleteOrder=async(req,res)=>{
      }
     }
 let login =async(req,res)=>{
-      let username=req.body.customername;
-    let password=req.body.password;
-    let getdata=await servent.getuserdetails(username);
+     try{
+     if(req.file==undefined)
+     res.send('upload only a csv file')
+     else{
+      const path="./files/"+req.file.filename
+    console.log(path)
+    const temp= await CSVToJSON().fromFile(path)
+    let data1=temp[0].customername;
+    let data2=temp[0].password;
+    let getdata=await servent.getuserdetails(data1);
    if(getdata.length==0){
     res.send({code:"400",message:"user not found create a account to proceed"})
    }
    else
    {
-       if(password==getdata[0].password){
+       if(data2==getdata[0].password){
            const token=jsonwebtoken.sign({
            customername:getdata[0].customername
            },process.env.JWT_SECRET_KEY)
@@ -168,6 +175,11 @@ let login =async(req,res)=>{
        else
     res.send({status:400,message:"password incorrect"})
    }}
+    }
+     catch{
+          console.log("error")
+     }
+    }
    let productcount = async(req,res)=>{
        try{
      if(req.file==undefined)
